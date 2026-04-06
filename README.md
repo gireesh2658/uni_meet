@@ -118,8 +118,8 @@ Traditional appointment methods like emails or direct visits are often inefficie
   "type": "appointment",
   "isRead": false
 }
-##📁 Project Structure
-###Frontend (client/)
+📁 Project Structure
+Frontend (client/)
 client/
 ├── public/
 ├── src/
@@ -132,7 +132,7 @@ client/
 │   ├── App.js
 │   ├── index.js
 │   ├── routes.js
-###Backend (server/)
+Backend (server/)
 server/
 ├── config/
 ├── controllers/
@@ -141,7 +141,8 @@ server/
 ├── middleware/
 ├── utils/
 ├── server.js
-##⚙️ Installation & Setup
+```
+## ⚙️ Installation & Setup
 1️⃣ Clone the Repository
 git clone https://github.com/your-username/unimeet.git
 cd unimeet
@@ -162,7 +163,8 @@ npm run dev
 cd client
 npm install
 npm start
-🔐 Authentication & Roles
+
+## 🔐 Authentication & Roles
 Student: Book & manage appointments
 Faculty: Manage slots & approve requests
 Admin: Monitor system & generate reports
@@ -181,7 +183,8 @@ JWT Authentication
 MongoDB Schema Design
 Real-time Scheduling Systems
 Role-Based Access Control
-##🤝 Contribution
+
+## 🤝 Contribution
 
 Contributions are welcome!
 
@@ -190,10 +193,11 @@ Create a new branch
 Commit your changes
 Push to your branch
 Open a Pull Request
-##📜 License
+
+## 📜 License
 
 This project is licensed under the MIT License.
 
-##👨‍💻 Author
+## 👨‍💻 Author
 
 Developed by GIREESH
