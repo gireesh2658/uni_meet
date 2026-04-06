@@ -1,0 +1,23 @@
+import React from "react";
+
+interface StatusBadgeProps {
+  status: "pending" | "approved" | "rejected" | "cancelled" | "completed";
+}
+
+const statusStyles: Record<string, string> = {
+  pending: "bg-warning/10 text-warning border-warning/20",
+  approved: "bg-success/10 text-success border-success/20",
+  rejected: "bg-destructive/10 text-destructive border-destructive/20",
+  cancelled: "bg-muted text-muted-foreground border-border",
+  completed: "bg-primary/10 text-primary border-primary/20",
+};
+
+const StatusBadge = ({ status }: StatusBadgeProps) => {
+  return (
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${statusStyles[status] || ""}`}>
+      {status}
+    </span>
+  );
+};
+
+export default StatusBadge;
