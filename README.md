@@ -1,29 +1,29 @@
-# 🎓 Unimeet – Faculty Appointment Management System
+# Unimeet – Faculty Appointment Management System
 
-## 📌 Introduction
+## Introduction
 Unimeet is a web-based Faculty Appointment Management System designed to simplify and organize the interaction between students and faculty members in universities and colleges.
 
 Traditional appointment methods like emails or direct visits are often inefficient, leading to scheduling conflicts and wasted time. Unimeet provides a centralized platform where students can easily book appointments with faculty based on available time slots.
 
 ---
 
-## 🚀 Features
+## Features
 
-- 🔐 User Authentication (Student / Faculty / Admin)
-- 👨‍🏫 Faculty Profile Management
-- 📅 Time Slot Creation & Management
-- 📌 Appointment Booking System
-- ❌ Conflict-Free Scheduling
-- ✅ Appointment Approval / Rejection
-- 🔄 Rescheduling & Cancellation
-- 🔔 Notification System
-- 📊 Admin Dashboard with Reports
-- 📁 Appointment History Tracking
-- 🛡️ Role-Based Access Control
+- User Authentication (Student / Faculty / Admin)
+- Faculty Profile Management
+- ime Slot Creation & Management
+- Appointment Booking System
+-  Conflict-Free Scheduling
+-  Appointment Approval / Rejection
+-  Rescheduling & Cancellation
+-  Notification System
+-  Admin Dashboard with Reports
+-  Appointment History Tracking
+-  Role-Based Access Control
 
 ---
 
-## 🧠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - React.js
@@ -51,7 +51,7 @@ Traditional appointment methods like emails or direct visits are often inefficie
 
 ---
 
-## 🏗️ System Architecture
+##  System Architecture
 
 - **Frontend:** React-based responsive UI  
 - **Backend:** REST APIs using Express.js  
@@ -61,9 +61,9 @@ Traditional appointment methods like emails or direct visits are often inefficie
 
 ---
 
-## 🔄 Project Flow
+##  Project Flow
 
-### 👨‍🎓 Student Flow
+###  Student Flow
 1. Register/Login
 2. Search Faculty
 3. View Available Slots
@@ -71,14 +71,14 @@ Traditional appointment methods like emails or direct visits are often inefficie
 5. Receive Confirmation
 6. Manage Appointments
 
-### 👩‍🏫 Faculty Flow
+###  Faculty Flow
 1. Login
 2. Create Time Slots
 3. View Requests
 4. Approve/Reject Appointments
 5. Manage Schedule
 
-### 🛠️ Admin Flow
+###  Admin Flow
 1. Manage Users
 2. Monitor Appointments
 3. Generate Reports
@@ -86,7 +86,7 @@ Traditional appointment methods like emails or direct visits are often inefficie
 
 ---
 
-## 🗂️ Database Collections
+## Database Collections
 
 ### Users
 ```json
@@ -96,14 +96,14 @@ Traditional appointment methods like emails or direct visits are often inefficie
   "password": "hashed_password",
   "role": "student"
 }
-##FACULTY
+FACULTY
 {
   "facultyName": "Dr. Sharma",
   "department": "Computer Science",
   "email": "drsharma@example.com",
   "availableSlots": ["10:00 AM", "11:00 AM"]
 }
-##APPOINTMENTS
+APPOINTMENTS
 {
   "studentName": "Ravi Kumar",
   "facultyName": "Dr. Sharma",
@@ -111,14 +111,16 @@ Traditional appointment methods like emails or direct visits are often inefficie
   "time": "10:00 AM",
   "status": "pending"
 }
-##NOTIFICATIONS
+NOTIFICATIONS
 {
   "userId": "user_id_reference",
   "message": "Your appointment has been confirmed",
   "type": "appointment",
   "isRead": false
 }
-📁 Project Structure
+```
+
+Project Structure
 Frontend (client/)
 client/
 ├── public/
@@ -141,12 +143,12 @@ server/
 ├── middleware/
 ├── utils/
 ├── server.js
-```
-## ⚙️ Installation & Setup
-1️⃣ Clone the Repository
+
+  Installation & Setup
+1️ Clone the Repository
 git clone https://github.com/your-username/unimeet.git
 cd unimeet
-2️⃣ Setup Backend
+2️ Setup Backend
 cd server
 npm install
 
@@ -159,24 +161,21 @@ JWT_SECRET=your_secret_key
 Run backend:
 
 npm run dev
-3️⃣ Setup Frontend
+3️ Setup Frontend
 cd client
 npm install
 npm start
 
-## 🔐 Authentication & Roles
+ Authentication & Roles
 Student: Book & manage appointments
 Faculty: Manage slots & approve requests
 Admin: Monitor system & generate reports
-📊 Future Enhancements
-📧 Email & SMS Notifications
-💬 Chat System
-📅 Calendar Integration
-🎥 Google Meet / Zoom Integration
-⭐ Feedback & Rating System
-📄 PDF Report Generation
-📱 Mobile App Version
-🎯 Learning Outcomes
+ Future Enhancements
+ SMS Notifications
+Chat System
+Feedback & Rating System
+ Mobile App Version
+ Learning Outcomes
 Full Stack Development (MERN)
 REST API Design
 JWT Authentication
@@ -184,7 +183,7 @@ MongoDB Schema Design
 Real-time Scheduling Systems
 Role-Based Access Control
 
-## 🤝 Contribution
+ Contribution
 
 Contributions are welcome!
 
@@ -194,10 +193,6 @@ Commit your changes
 Push to your branch
 Open a Pull Request
 
-## 📜 License
-
-This project is licensed under the MIT License.
-
-## 👨‍💻 Author
+##  Author
 
 Developed by GIREESH
