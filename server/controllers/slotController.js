@@ -232,6 +232,28 @@ exports.cancelSlot = async (req, res, next) => {
           type: 'appointment_cancelled',
           appointmentId: appointment._id
         });
+
+        // Send email to student
+        const sendEmail = require('../utils/sendEmail');
+        const emailTemplates = require('../utils/emailTemplates');
+        const logger = require('../utils/logger');
+        const formatTimeAmPm = (timeStr) => {
+          if (!timeStr) return "";
+          if (timeStr.toUpperCase().includes('AM') || timeStr.toUpperCase().includes('PM')) return timeStr;
+          const [hours, minutes] = timeStr.split(":");
+          if (hours === undefined || minutes === undefined) return timeStr;
+          const h = parseInt(hours, 10);
+          const ampm = h >= 12 ? "PM" : "AM";
+          const formattedH = h % 12 || 12;
+          return `${String(formattedH).padStart(2, '0')}:${minutes} ${ampm}`;
+        };
+        const timeSlotStr = `${formatTimeAmPm(slot.startTime)} - ${formatTimeAmPm(slot.endTime)}`;
+        sendEmail({
+          to: appointment.studentId.userId.email,
+          subject: 'Appointment Cancelled by Faculty',
+          html: emailTemplates.appointmentCancelledByFaculty(appointment.studentId.userId.name, facultyName, slot.date, timeSlotStr)
+        }).catch(err => logger.error(`Email error: ${err.message}`));
+        logger.info(`Faculty cancel email queued to student: ${appointment.studentId.userId.email}`);
       }
     }
 

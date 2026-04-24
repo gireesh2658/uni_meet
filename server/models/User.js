@@ -36,8 +36,23 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  refreshToken: {
-    type: String,
+  // ── Refresh Token Storage ──
+  // Each entry represents one device/session.
+  // tokenFamily: ties rotated tokens together so reuse detection
+  //   can wipe the entire family (all descendants of one login).
+  // usedAt: set atomically by findOneAndUpdate when consumed.
+  //   Presence of usedAt means the token was already rotated.
+  refreshTokens: {
+    type: [{
+      _id: false,
+      tokenHash:   { type: String, required: true },
+      tokenFamily: { type: String, required: true },
+      expiresAt:   { type: Date,   required: true },
+      deviceIp:    String,
+      userAgent:   String,
+      createdAt:   { type: Date, default: Date.now },
+      usedAt:      Date   // set atomically on rotation; null = active
+    }],
     select: false
   },
   passwordResetToken: {
@@ -55,6 +70,12 @@ const userSchema = new mongoose.Schema({
   },
   lockUntil: Date
 }, { timestamps: true });
+
+// ── Index for O(1) atomic token lookups ──
+// This is critical: without it, findOneAndUpdate scans the entire
+// refreshTokens array linearly on every refresh request.
+userSchema.index({ 'refreshTokens.tokenHash': 1 });
+userSchema.index({ role: 1, isActive: 1 });
 
 userSchema.pre('save', async function () {
   if (!this.isModified('password')) return;

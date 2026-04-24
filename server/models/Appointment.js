@@ -32,7 +32,7 @@ const appointmentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed', 'missed'],
+    enum: ['pending', 'approved', 'rejected', 'cancelled', 'completed', 'missed', 'rescheduled'],
     default: 'pending'
   },
   rejectionReason: {
@@ -57,11 +57,38 @@ const appointmentSchema = new mongoose.Schema({
     enum: ['online', 'offline'],
     required: true,
     default: 'offline'
+  },
+  rescheduledTo: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Appointment',
+    default: null
+  },
+  rescheduledFrom: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Appointment',
+    default: null
+  },
+  suggestedSlotId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TimeSlot',
+    default: null
+  },
+  rescheduleMessage: {
+    type: String,
+    maxLength: 500
+  },
+  rescheduleStatus: {
+    type: String,
+    enum: ['pending_student', 'confirmed', 'declined', 'expired'],
+    default: null
   }
 }, { timestamps: true });
 
 appointmentSchema.index({ studentId: 1, status: 1 });
 appointmentSchema.index({ facultyId: 1, status: 1 });
 appointmentSchema.index({ date: 1 });
+appointmentSchema.index({ status: 1, date: 1 });
+appointmentSchema.index({ status: 1, updatedAt: 1 });
+appointmentSchema.index({ createdAt: 1 });
 
 module.exports = mongoose.model('Appointment', appointmentSchema);

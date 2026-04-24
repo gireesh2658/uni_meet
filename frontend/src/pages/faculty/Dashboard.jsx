@@ -20,15 +20,15 @@ const FacultyDashboard = () => {
   const [meetingUrl, setMeetingUrl] = useState("");
 
   useEffect(() => {
-    // Build weekly chart data from real appointments
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    // Build rolling 7-day chart: today + next 6 days
+    const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const now = new Date();
-    const counts = days.map((day, i) => {
+    const counts = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(now);
-      d.setDate(now.getDate() - ((now.getDay() - i + 7) % 7));
+      d.setDate(now.getDate() + i);
       const dateStr = d.toISOString().split("T")[0];
       return {
-        day,
+        day: dayLabels[d.getDay()],
         count: appointments.filter((a) => a.date?.slice(0, 10) === dateStr).length,
       };
     });

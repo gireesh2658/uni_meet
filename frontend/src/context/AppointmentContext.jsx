@@ -48,7 +48,10 @@ export const AppointmentProvider = ({ children }) => {
       intervalId = setInterval(fetchNotifications, 30000);
       
       const handleVisibility = () => {
-        if (!document.hidden) fetchNotifications();
+        if (!document.hidden) {
+          fetchNotifications();
+          fetchAppointments();
+        }
       };
       document.addEventListener("visibilitychange", handleVisibility);
       
@@ -128,12 +131,45 @@ export const AppointmentProvider = ({ children }) => {
     } catch {}
   };
 
+  const rescheduleStudent = async (id, newSlotId, purpose) => {
+    try {
+      const res = await apiClient.post(`/appointments/${id}/reschedule-student`, { newSlotId, purpose });
+      if (res?.success) fetchAppointments();
+      return res;
+    } catch {}
+  };
+
+  const rescheduleFaculty = async (id, suggestedSlotId, message) => {
+    try {
+      const res = await apiClient.post(`/appointments/${id}/reschedule-faculty`, { suggestedSlotId, message });
+      if (res?.success) fetchAppointments();
+      return res;
+    } catch {}
+  };
+
+  const rescheduleConfirmAction = async (id) => {
+    try {
+      const res = await apiClient.patch(`/appointments/${id}/reschedule-confirm`, {});
+      if (res?.success) fetchAppointments();
+      return res;
+    } catch {}
+  };
+
+  const rescheduleDeclineAction = async (id) => {
+    try {
+      const res = await apiClient.patch(`/appointments/${id}/reschedule-decline`, {});
+      if (res?.success) fetchAppointments();
+      return res;
+    } catch {}
+  };
+
   return (
     <AppointmentContext.Provider value={{
       appointments, notifications, unreadCount,
       fetchAppointments, fetchNotifications, addAppointment,
       updateAppointmentStatus, addMeetingLink, markAllNotificationsRead, markNotificationRead,
-      deleteNotification, clearAllNotifications
+      deleteNotification, clearAllNotifications,
+      rescheduleStudent, rescheduleFaculty, rescheduleConfirmAction, rescheduleDeclineAction
     }}>
       {children}
     </AppointmentContext.Provider>

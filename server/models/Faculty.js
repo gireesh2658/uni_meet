@@ -55,4 +55,7 @@ const facultySchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
+facultySchema.index({ isApproved: 1, department: 1 });
+facultySchema.index({ totalAppointments: -1 });
+
 module.exports = mongoose.model('Faculty', facultySchema);

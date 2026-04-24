@@ -49,8 +49,8 @@ const MySlots = () => {
 
   useEffect(() => { fetchSlots(); }, [fetchSlots]);
 
-  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  const today = new Date();
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(today, i));
 
   const handleAdd = async () => {
     const start24 = to24h(newSlot.startTime);

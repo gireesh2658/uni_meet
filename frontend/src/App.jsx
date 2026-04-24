@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import JoinMeeting from "./pages/JoinMeeting";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -33,6 +34,8 @@ import ManageUsers from "./pages/admin/ManageUsers";
 import ManageFaculty from "./pages/admin/ManageFaculty";
 import AllAppointments from "./pages/admin/AllAppointments";
 import Reports from "./pages/admin/Reports";
+import AdminNotifications from "./pages/admin/Notifications";
+import AdminProfile from "./pages/admin/Profile";
 
 const App = () =>
   <AuthProvider>
@@ -45,6 +48,7 @@ const App = () =>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/join/:meetingId" element={<JoinMeeting />} />
 
             <Route path="/student" element={<ProtectedRoute allowedRole="student"><StudentLayout /></ProtectedRoute>}>
@@ -73,6 +77,8 @@ const App = () =>
               <Route path="faculty" element={<ManageFaculty />} />
               <Route path="appointments" element={<AllAppointments />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="notifications" element={<AdminNotifications />} />
+              <Route path="profile" element={<AdminProfile />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
@@ -83,3 +89,4 @@ const App = () =>
   </AuthProvider>;
 
 export default App;
+// Route update: admin notifications + profile

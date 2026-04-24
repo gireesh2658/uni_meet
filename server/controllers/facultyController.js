@@ -156,18 +156,21 @@ exports.getFacultySlots = async (req, res, next) => {
 
 exports.getMyProfile = async (req, res, next) => {
   try {
-    const faculty = await Faculty.findOne({ userId: req.user._id })
+    let faculty = await Faculty.findOne({ userId: req.user._id })
       .populate('userId', 'name email')
       .lean();
 
     if (!faculty) {
-      faculty = await Faculty.create({
+      const created = await Faculty.create({
         userId: req.user._id,
         employeeId: `EMP${Math.floor(Math.random() * 100000)}`,
         department: 'Computer Science',
         designation: 'Assistant Professor',
         isApproved: true
-      }).then(doc => doc.populate('userId', 'name email'));
+      });
+      faculty = await Faculty.findById(created._id)
+        .populate('userId', 'name email')
+        .lean();
     }
 
     return successResponse(res, 200, 'Profile retrieved', faculty);

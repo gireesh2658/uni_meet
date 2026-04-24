@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { apiClient } from "@/services/api";
+import { apiClient, setTokens, clearTokens } from "@/services/api";
 
 const AuthContext = createContext(undefined);
 
@@ -27,6 +27,8 @@ export const AuthProvider = ({ children }) => {
       const userData = { ...res.data.user };
       setUser(userData);
       localStorage.setItem("unimeet_user", JSON.stringify(userData));
+      // Store JWT tokens in localStorage
+      setTokens(res.data.accessToken, res.data.refreshToken);
       return { success: true, role: res.data.user.role };
     }
     return { success: false, message: res.message || "Invalid credentials" };
@@ -42,10 +44,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await apiClient.post("/auth/logout", {});
+      const refreshToken = localStorage.getItem("unimeet_refresh_token");
+      await apiClient.post("/auth/logout", { refreshToken });
     } catch {}
     setUser(null);
     localStorage.removeItem("unimeet_user");
+    clearTokens();
   };
 
   const updateUser = (data) => {

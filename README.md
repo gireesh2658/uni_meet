@@ -120,7 +120,7 @@ NOTIFICATIONS
 }
 ```
 
-Project Structure
+//Project Structure
 Frontend (client/)
 client/
 ├── public/

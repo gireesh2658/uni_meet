@@ -1,15 +1,36 @@
 import React, { useState } from "react";
 import { useAppointments } from "@/context/AppointmentContext";
-import { Eye, X as XIcon, Calendar, Download } from "lucide-react";
+import { Eye, X as XIcon, Calendar, Download, RefreshCw } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmModal from "@/components/ConfirmModal";
 import EmptyState from "@/components/EmptyState";
+import RescheduleFacultyModal from "@/components/RescheduleFacultyModal";
 import { formatDate, truncate, formatTimeSlot } from "@/utils/helpers";
 import { toast } from "sonner";
 
-const tabs = ["pending", "approved", "rejected", "completed", "all"];
+const tabs = ["pending", "approved", "rejected", "completed", "missed", "rescheduled", "all"];
+
+// Check if appointment starts within 2 hours
+const isWithin2Hours = (appt) => {
+  if (!appt?.date || !appt?.timeSlot) return false;
+  try {
+    const d = new Date(appt.date);
+    const timeStr = appt.timeSlot.split('-')[0].trim();
+    let hours, minutes;
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+      const [time, mod] = timeStr.split(' ');
+      [hours, minutes] = time.split(':').map(Number);
+      if (mod === 'PM' && hours !== 12) hours += 12;
+      if (mod === 'AM' && hours === 12) hours = 0;
+    } else {
+      [hours, minutes] = timeStr.split(':').map(Number);
+    }
+    d.setHours(hours, minutes, 0, 0);
+    return (d.getTime() - Date.now()) < 2 * 60 * 60 * 1000;
+  } catch { return false; }
+};
 
 const FacultyRequests = () => {
   const { appointments, updateAppointmentStatus, addMeetingLink, fetchAppointments } = useAppointments();
@@ -22,6 +43,7 @@ const FacultyRequests = () => {
   const [loading, setLoading] = useState(false);
   const [detail, setDetail] = useState(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [rescheduleAppt, setRescheduleAppt] = useState(null);
 
   // appointments from context are already scoped to the logged-in faculty via the backend
   const filtered = tab === "all" ? appointments : appointments.filter((a) => a.status === tab);
@@ -172,6 +194,13 @@ const FacultyRequests = () => {
                           <button onClick={() => setRejectId(a._id)} disabled={loading} className="rounded-lg bg-destructive px-3 py-1 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50">Reject</button>
                         </div>
                       )}
+                      {(a.status === "pending" || a.status === "approved") && new Date(a.date) >= new Date() && (
+                        isWithin2Hours(a) ? (
+                          <span className="rounded border border-muted bg-muted px-2 py-1 text-[10px] text-muted-foreground cursor-not-allowed" title="Cannot reschedule within 2 hours of start">Reschedule</span>
+                        ) : (
+                          <button onClick={() => setRescheduleAppt(a)} className="rounded border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-xs font-medium text-violet-600 hover:bg-violet-500/20 flex items-center gap-1"><RefreshCw className="h-3 w-3" />Reschedule</button>
+                        )
+                      )}
                     {a.status === "approved" && (
                       <div className="flex flex-col gap-1 sm:flex-row items-start sm:items-center">
                         {a.mode === 'online' && !a.meetingLink && (
@@ -195,6 +224,9 @@ const FacultyRequests = () => {
                     )}
                     {a.status === "cancelled" && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">Cancelled</span>
+                    )}
+                    {a.status === "rescheduled" && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2.5 py-1 text-xs font-medium text-violet-600">↻ Rescheduled</span>
                     )}
                     </div>
                   </td>
@@ -275,6 +307,8 @@ const FacultyRequests = () => {
           </div>
         </div>
       )}
+
+      <RescheduleFacultyModal open={!!rescheduleAppt} appointment={rescheduleAppt} onClose={() => setRescheduleAppt(null)} />
     </div>
   );
 };

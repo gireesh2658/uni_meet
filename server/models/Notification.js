@@ -19,7 +19,8 @@ const notificationSchema = new mongoose.Schema({
     enum: [
       'appointment_booked', 'appointment_approved', 'appointment_rejected',
       'appointment_cancelled', 'appointment_reminder', 'slot_created',
-      'account_approved', 'general'
+      'account_approved', 'meeting_link_added', 'general',
+      'reschedule_suggested', 'reschedule_confirmed', 'reschedule_declined'
     ],
     required: true
   },

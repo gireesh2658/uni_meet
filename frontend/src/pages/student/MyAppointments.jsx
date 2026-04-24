@@ -3,22 +3,63 @@ import { useAppointments } from "@/context/AppointmentContext";
 import StatusBadge from "@/components/StatusBadge";
 import ConfirmModal from "@/components/ConfirmModal";
 import EmptyState from "@/components/EmptyState";
+import RescheduleStudentModal from "@/components/RescheduleStudentModal";
 import { formatDate, truncate, formatTimeSlot } from "@/utils/helpers";
-import { Calendar, Eye, X as XIcon } from "lucide-react";
+import { Calendar, Eye, X as XIcon, RefreshCw, Download, Check, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Download } from "lucide-react";
 
-const tabs = ["all", "pending", "approved", "rejected", "cancelled", "completed"];
+const tabs = ["all", "pending", "approved", "rejected", "cancelled", "completed", "missed", "rescheduled"];
+
+// Check if appointment starts within 2 hours
+const isWithin2Hours = (appt) => {
+  if (!appt?.date || !appt?.timeSlot) return false;
+  try {
+    const d = new Date(appt.date);
+    const timeStr = appt.timeSlot.split('-')[0].trim();
+    let hours, minutes;
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+      const [time, mod] = timeStr.split(' ');
+      [hours, minutes] = time.split(':').map(Number);
+      if (mod === 'PM' && hours !== 12) hours += 12;
+      if (mod === 'AM' && hours === 12) hours = 0;
+    } else {
+      [hours, minutes] = timeStr.split(':').map(Number);
+    }
+    d.setHours(hours, minutes, 0, 0);
+    return (d.getTime() - Date.now()) < 2 * 60 * 60 * 1000;
+  } catch { return false; }
+};
 
 const MyAppointments = () => {
-  const { appointments, updateAppointmentStatus, fetchAppointments } = useAppointments();
+  const { appointments, updateAppointmentStatus, fetchAppointments, rescheduleConfirmAction, rescheduleDeclineAction } = useAppointments();
   const [tab, setTab] = useState("all");
   const [cancelId, setCancelId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [cancelling, setCancelling] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [rescheduleAppt, setRescheduleAppt] = useState(null);
+  const [confirmingId, setConfirmingId] = useState(null);
+
+  // Faculty-suggested reschedules needing student response
+  const pendingReschedules = appointments.filter(a => a.status === 'rescheduled' && a.rescheduleStatus === 'pending_student');
+
+  const handleRescheduleConfirm = async (id) => {
+    setConfirmingId(id);
+    const res = await rescheduleConfirmAction(id);
+    if (res?.success) toast.success("Reschedule confirmed! New appointment created.");
+    else toast.error(res?.message || "Failed to confirm");
+    setConfirmingId(null);
+  };
+
+  const handleRescheduleDecline = async (id) => {
+    setConfirmingId(id);
+    const res = await rescheduleDeclineAction(id);
+    if (res?.success) toast.success("Reschedule declined. You can book a new slot.");
+    else toast.error(res?.message || "Failed to decline");
+    setConfirmingId(null);
+  };
 
   // appointments from context are already scoped to the logged-in student via the backend
   const filtered = tab === "all" ? appointments : appointments.filter((a) => a.status === tab);
@@ -128,6 +169,13 @@ const MyAppointments = () => {
                         {(a.status === "pending" || a.status === "approved") && new Date(a.date) >= new Date() && (
                           <button onClick={() => setCancelId(a._id)} className="rounded p-1 text-destructive hover:bg-destructive/10"><XIcon className="h-4 w-4" /></button>
                         )}
+                        {(a.status === "pending" || a.status === "approved") && new Date(a.date) >= new Date() && (
+                          isWithin2Hours(a) ? (
+                            <span className="rounded border border-muted bg-muted px-2 py-1 text-[10px] text-muted-foreground cursor-not-allowed" title="Cannot reschedule within 2 hours of start">Reschedule</span>
+                          ) : (
+                            <button onClick={() => setRescheduleAppt(a)} className="rounded border border-violet-500/30 bg-violet-500/10 px-2 py-1 text-xs font-medium text-violet-600 hover:bg-violet-500/20 flex items-center gap-1"><RefreshCw className="h-3 w-3" />Reschedule</button>
+                          )
+                        )}
                         {a.status === "approved" && a.mode === "online" && (a.meetingLink ? <a href={a.meetingLink} target="_blank" rel="noreferrer" className="rounded border border-primary/20 bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20">Join</a> : <span className="rounded border border-warning/20 bg-warning/10 px-2 py-1 text-[10px] font-medium text-warning text-nowrap">Wait for Link</span>)}
                         {a.status === "approved" && (!a.mode || a.mode === "offline") && <span className="rounded border border-border bg-muted px-2 py-1 text-[10px] font-medium text-muted-foreground">Offline</span>}
                       </div>
@@ -154,10 +202,13 @@ const MyAppointments = () => {
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">{formatDate(a.date)} • {formatTimeSlot(a.timeSlot) || "—"}</p>
                 <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{a.purpose}</p>
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <button onClick={() => setDetail(a)} className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted">View Details</button>
                   {(a.status === "pending" || a.status === "approved") && new Date(a.date) >= new Date() && (
                     <button onClick={() => setCancelId(a._id)} className="rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10">Cancel</button>
+                  )}
+                  {(a.status === "pending" || a.status === "approved") && new Date(a.date) >= new Date() && !isWithin2Hours(a) && (
+                    <button onClick={() => setRescheduleAppt(a)} className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-600 hover:bg-violet-500/20 flex items-center gap-1"><RefreshCw className="h-3 w-3" />Reschedule</button>
                   )}
                   {a.status === "approved" && a.mode === "online" && (a.meetingLink ? <a href={a.meetingLink} target="_blank" rel="noreferrer" className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20">Join Meeting</a> : <span className="rounded-lg border border-warning/20 bg-warning/10 px-3 py-1.5 text-[10px] font-medium text-warning max-w-[100px] text-center">Waiting For Link</span>)}
                 </div>
@@ -165,6 +216,35 @@ const MyAppointments = () => {
             ))}
           </div>
         </>
+      )}
+
+      {/* Faculty-suggested reschedule cards */}
+      {pendingReschedules.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-foreground">Action Required — Faculty Reschedule Suggestions</h3>
+          {pendingReschedules.map(a => (
+            <div key={a._id + '-resched'} className="rounded-xl border-2 border-amber-500/40 bg-amber-500/5 p-4 shadow-sm page-fade-in">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="font-semibold text-foreground">{a.facultyId?.userId?.name || 'Faculty'} suggested a new time</p>
+                  <p className="text-xs text-muted-foreground mt-1">Original: {formatDate(a.date)} • {formatTimeSlot(a.timeSlot)}</p>
+                  {a.rescheduleMessage && <p className="text-sm text-foreground mt-1 italic">"{a.rescheduleMessage}"</p>}
+                </div>
+                <StatusBadge status="rescheduled" />
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button onClick={() => handleRescheduleConfirm(a._id)} disabled={!!confirmingId}
+                  className="rounded-lg bg-success px-4 py-1.5 text-xs font-semibold text-success-foreground hover:bg-success/90 disabled:opacity-50 flex items-center gap-1">
+                  <Check className="h-3 w-3" />Confirm New Time
+                </button>
+                <button onClick={() => handleRescheduleDecline(a._id)} disabled={!!confirmingId}
+                  className="rounded-lg border border-destructive/30 px-4 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50 flex items-center gap-1">
+                  <XCircle className="h-3 w-3" />Decline
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
 
       <ConfirmModal
@@ -232,6 +312,8 @@ const MyAppointments = () => {
           </div>
         </div>
       )}
+
+      <RescheduleStudentModal open={!!rescheduleAppt} appointment={rescheduleAppt} onClose={() => setRescheduleAppt(null)} />
     </div>
   );
 };

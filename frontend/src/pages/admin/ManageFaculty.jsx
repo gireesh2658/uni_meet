@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/services/api";
-import { Ban, CheckCircle } from "lucide-react";
+import { Ban, CheckCircle, Download } from "lucide-react";
 import { toast } from "sonner";
 
 const ManageFaculty = () => {
@@ -36,11 +36,38 @@ const ManageFaculty = () => {
 
   const displayedFaculty = faculty.filter(f => filter === "all" ? true : !f.isApproved);
 
+  const exportCSV = () => {
+    if (displayedFaculty.length === 0) { toast.error("No data to export"); return; }
+    const headers = ["Name", "Department", "Designation", "Employee ID", "Appointments", "Status"];
+    const rows = displayedFaculty.map((f) => [
+      f.userId?.name || "",
+      f.department || "",
+      f.designation || "",
+      f.employeeId || "",
+      f.totalAppointments ?? 0,
+      f.isApproved ? "Approved" : "Pending Approval"
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "manage_faculty.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully");
+  };
+
   return (
     <div className="page-fade-in space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl font-bold text-foreground">Manage Faculty</h2>
         <div className="flex gap-2">
+           <button onClick={exportCSV} className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors" title="Export CSV">
+             <Download className="h-4 w-4" /> Export CSV
+           </button>
            <button onClick={() => setFilter("pending")} className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${filter === "pending" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
              Pending
            </button>

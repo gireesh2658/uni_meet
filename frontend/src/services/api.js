@@ -1,4 +1,38 @@
+import axios from 'axios';
+
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+export const setTokens = (accessToken, refreshToken) => {
+  if (accessToken) localStorage.setItem("unimeet_access_token", accessToken);
+  if (refreshToken) localStorage.setItem("unimeet_refresh_token", refreshToken);
+};
+
+export const clearTokens = () => {
+  localStorage.removeItem("unimeet_access_token");
+  localStorage.removeItem("unimeet_refresh_token");
+};
+
+const getAccessToken = () => localStorage.getItem("unimeet_access_token");
+const getRefreshToken = () => localStorage.getItem("unimeet_refresh_token");
+
+const axiosInstance = axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    "Content-Type": "application/json"
+  },
+  withCredentials: true // Ensure cross-origin cookies work if needed
+});
+
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getAccessToken();
+    if (token && token !== 'null' && token !== 'undefined' && token.trim() !== '') {
+      config.headers["Authorization"] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -11,98 +45,72 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-const handleResponse = async (res, originalRequestParams) => {
-  if (res.status === 401) {
-    if (window.location.pathname === "/login" || window.location.pathname === "/register") {
-      return res.json();
+axiosInstance.interceptors.response.use(
+  (response) => {
+    return response.data; // Return the inner data object { success: true, data: ... }
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    
+    if (!error.response) {
+      return { success: false, message: "Network error. Is the server running?" };
     }
 
-    if (!isRefreshing) {
+    if (error.response.status === 401 && !originalRequest._retry) {
+      if (originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/auth/register')) {
+        return error.response.data;
+      }
+
+      if (isRefreshing) {
+        return new Promise(function(resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return axiosInstance(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
       isRefreshing = true;
+
       try {
-        const refreshRes = await fetch(`${BASE_URL}/auth/refresh-token`, {
-          method: 'POST',
-          credentials: 'include'
+        const refreshRes = await axios.post(`${BASE_URL}/auth/refresh-token`, {
+          refreshToken: getRefreshToken()
         });
         
-        if (refreshRes.ok) {
+        if (refreshRes.data.success) {
+          const { accessToken, refreshToken } = refreshRes.data.data;
+          setTokens(accessToken, refreshToken);
+          
+          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+          originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
+          
+          processQueue(null, accessToken);
           isRefreshing = false;
-          processQueue(null, true);
-          // Retry original request
-          const retryRes = await fetch(originalRequestParams.url, originalRequestParams.options);
-          return retryRes.json();
-        } else {
-          throw new Error('Refresh failed');
+          
+          return axiosInstance(originalRequest);
         }
       } catch (err) {
         processQueue(err, null);
         isRefreshing = false;
+        clearTokens();
         localStorage.removeItem("unimeet_user");
         window.location.href = "/login";
-        return { success: false, message: "Session expired" };
+        return { success: false, message: "Session expired, please log in again." };
       }
-    } else {
-      // If currently refreshing, wait into queue
-      return new Promise((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      }).then(async () => {
-        const retryRes = await fetch(originalRequestParams.url, originalRequestParams.options);
-        return retryRes.json();
-      }).catch(err => {
-        return Promise.reject(err);
-      });
     }
+    
+    // Always return a graceful object to avoid unhandled rejections crashing the app
+    return error.response.data || { success: false, message: "An error occurred" };
   }
-  return res.json();
-};
+);
 
 export const apiClient = {
-  async get(endpoint) {
-    const url = `${BASE_URL}${endpoint}`;
-    const options = { credentials: "include", headers: { "Content-Type": "application/json" } };
-    const res = await fetch(url, options);
-    return handleResponse(res, { url, options });
-  },
-  async post(endpoint, data) {
-    const url = `${BASE_URL}${endpoint}`;
-    const options = {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    };
-    const res = await fetch(url, options);
-    return handleResponse(res, { url, options });
-  },
-  async put(endpoint, data) {
-    const url = `${BASE_URL}${endpoint}`;
-    const options = {
-      method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    };
-    const res = await fetch(url, options);
-    return handleResponse(res, { url, options });
-  },
-  async patch(endpoint, data) {
-    const url = `${BASE_URL}${endpoint}`;
-    const options = {
-      method: "PATCH",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: data !== undefined ? JSON.stringify(data) : undefined
-    };
-    const res = await fetch(url, options);
-    return handleResponse(res, { url, options });
-  },
-  async delete(endpoint) {
-    const url = `${BASE_URL}${endpoint}`;
-    const options = {
-      method: "DELETE",
-      credentials: "include"
-    };
-    const res = await fetch(url, options);
-    return handleResponse(res, { url, options });
-  }
+  get: (url) => axiosInstance.get(url),
+  post: (url, data) => axiosInstance.post(url, data),
+  put: (url, data) => axiosInstance.put(url, data),
+  patch: (url, data) => axiosInstance.patch(url, data),
+  delete: (url) => axiosInstance.delete(url, { data: {} })
 };

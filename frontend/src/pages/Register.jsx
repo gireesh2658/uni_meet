@@ -8,7 +8,7 @@ import { toast } from "sonner";
 const DEPARTMENTS = [
   "Computer Science", "Information Technology", "Electronics & Communication",
   "Electrical Engineering", "Mechanical Engineering", "Civil Engineering",
-  "MBA", "MCA", "Mathematics", "Physics", "Chemistry"
+  "MBA", "MCA", "Mathematics", "Physics", "Chemistry", "English"
 ];
 
 const Register = () => {
@@ -23,8 +23,14 @@ const Register = () => {
   const navigate = useNavigate();
 
   const set = (key, val) => {
-    setForm((p) => ({ ...p, [key]: val }));
-    setErrors((p) => ({ ...p, [key]: "" }));
+    if (key === 'role') {
+      // Reset role-specific fields when switching roles
+      setForm((p) => ({ ...p, role: val, studentId: "", employeeId: "", designation: "" }));
+      setErrors((p) => ({ ...p, role: "", studentId: "", employeeId: "", designation: "" }));
+    } else {
+      setForm((p) => ({ ...p, [key]: val }));
+      setErrors((p) => ({ ...p, [key]: "" }));
+    }
   };
 
   const strength = getPasswordStrength(form.password);

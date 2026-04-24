@@ -24,7 +24,7 @@ const timeSlotSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['available', 'booked', 'cancelled'],
+    enum: ['available', 'booked', 'cancelled', 'reserved'],
     default: 'available'
   },
   bookedBy: {
@@ -37,10 +37,20 @@ const timeSlotSchema = new mongoose.Schema({
     enum: ['online', 'offline'],
     required: true,
     default: 'offline'
+  },
+  reservedUntil: {
+    type: Date,
+    default: null
+  },
+  reservedFor: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Appointment',
+    default: null
   }
 }, { timestamps: true });
 
 timeSlotSchema.index({ facultyId: 1, date: 1, startTime: 1 }, { unique: true });
+timeSlotSchema.index({ facultyId: 1, status: 1, date: 1 });
 
 timeSlotSchema.pre('validate', function() {
   if (this.startTime && this.endTime && this.startTime >= this.endTime) {

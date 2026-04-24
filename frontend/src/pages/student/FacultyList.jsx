@@ -13,7 +13,8 @@ const FacultyList = () => {
 
   useEffect(() => {
     const fetch_ = async () => {
-      const res = await apiClient.get("/faculty");
+      setLoading(true);
+      const res = await apiClient.get(`/faculty?_t=${Date.now()}`);
       if (res.success) {
         const list = res.data || [];
         setFaculty(list);

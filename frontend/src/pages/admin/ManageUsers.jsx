@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
-import { Search, Ban, Trash2 } from "lucide-react";
+import { Search, Ban, Trash2, Download } from "lucide-react";
 import ConfirmModal from "@/components/ConfirmModal";
 import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
@@ -29,6 +29,29 @@ const ManageUsers = () => {
     return matchSearch && matchRole;
   });
 
+  const exportCSV = () => {
+    if (filtered.length === 0) { toast.error("No data to export"); return; }
+    const headers = ["Name", "Email", "Role", "Department", "Status"];
+    const rows = filtered.map((u) => [
+      u.name || "",
+      u.email || "",
+      u.role || "",
+      u.profile?.department || "",
+      u.isActive ? "Active" : "Suspended"
+    ]);
+    const csvContent = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "manage_users.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported successfully");
+  };
+
   const toggleStatus = async (id, currentStatus) => {
     const res = await apiClient.patch(`/admin/users/${id}/toggle-status`, {});
     if (res.success) {
@@ -51,7 +74,12 @@ const ManageUsers = () => {
     <div className="page-fade-in space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-foreground">Manage Users</h2>
-        <span className="text-sm text-muted-foreground">{users.length} total users</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">{users.length} total users</span>
+          <button onClick={exportCSV} className="flex items-center gap-1.5 rounded-lg border border-input bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted transition-colors" title="Export CSV">
+            <Download className="h-4 w-4" /> Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -99,6 +127,8 @@ const ManageUsers = () => {
                   <td className="px-4 py-3">
                     {u._id === currentUser?.id ? (
                       <span className="text-xs font-medium text-muted-foreground italic">This is you</span>
+                    ) : u.role === 'admin' ? (
+                      <span className="text-xs font-medium text-muted-foreground italic">Admin</span>
                     ) : (
                       <div className="flex gap-1">
                         <button onClick={() => toggleStatus(u._id, u.isActive)} className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground" title={u.isActive ? "Suspend" : "Activate"}><Ban className="h-4 w-4" /></button>

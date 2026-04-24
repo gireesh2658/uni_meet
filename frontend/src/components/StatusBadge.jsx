@@ -10,7 +10,8 @@ const statusStyles = {
   rejected: "bg-destructive/10 text-destructive border-destructive/20",
   cancelled: "bg-muted text-muted-foreground border-border",
   completed: "bg-primary/10 text-primary border-primary/20",
-  missed: "bg-destructive/10 text-destructive border-destructive/20"
+  missed: "bg-orange-500/10 text-orange-600 border-orange-500/20",
+  rescheduled: "bg-violet-500/10 text-violet-600 border-violet-500/20"
 };
 
 const StatusBadge = ({ status }) => {

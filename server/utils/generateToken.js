@@ -10,11 +10,11 @@ const generateRefreshToken = (userId) => {
 };
 
 const verifyAccessToken = (token) => {
-  return jwt.verify(token, jwtSecret);
+  return jwt.verify(token, jwtSecret, { algorithms: ['HS256'] });
 };
 
 const verifyRefreshToken = (token) => {
-  return jwt.verify(token, jwtRefreshSecret);
+  return jwt.verify(token, jwtRefreshSecret, { algorithms: ['HS256'] });
 };
 
 module.exports = {

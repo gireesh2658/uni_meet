@@ -115,5 +115,31 @@ module.exports = {
     <p>Dear ${facultyName},</p>
     <p>Great news! Your faculty account has been <strong>approved</strong> by the administrator.</p>
     <p>You can now log in, create available time slots, and manage student appointments.</p>
+  `),
+
+  rescheduleByFacultyEmail: (studentName, facultyName, oldDate, oldTime, newDate, newTime, message) => baseTemplate(`
+    <p>Dear ${studentName},</p>
+    <p><strong>${facultyName}</strong> has rescheduled your appointment.</p>
+    <p><strong>Original:</strong> ${new Date(oldDate).toDateString()} at ${oldTime}</p>
+    <p><strong>Suggested New Time:</strong> ${new Date(newDate).toDateString()} at ${newTime}</p>
+    ${message ? '<p><strong>Message:</strong> ' + message + '</p>' : ''}
+    <p>Please log in to confirm or decline the suggested new time. The slot is reserved for you for 24 hours.</p>
+    <a href="${process.env.CLIENT_URL || 'http://localhost:8080'}/student/appointments" class="btn">View & Respond</a>
+  `),
+
+  rescheduleConfirmedEmail: (facultyName, studentName, date, timeSlot) => baseTemplate(`
+    <p>Dear ${facultyName},</p>
+    <p><strong>${studentName}</strong> has confirmed the rescheduled appointment.</p>
+    <ul>
+      <li><strong>Date:</strong> ${new Date(date).toDateString()}</li>
+      <li><strong>Time:</strong> ${timeSlot}</li>
+    </ul>
+    <p>The appointment is now pending your approval as usual.</p>
+  `),
+
+  rescheduleDeclinedEmail: (facultyName, studentName) => baseTemplate(`
+    <p>Dear ${facultyName},</p>
+    <p><strong>${studentName}</strong> has declined the rescheduled appointment suggestion.</p>
+    <p>The reserved time slot has been released back to available. The student may book a new appointment at their convenience.</p>
   `)
 };

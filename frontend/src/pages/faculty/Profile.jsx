@@ -4,7 +4,7 @@ import { apiClient } from "@/services/api";
 import { toast } from "sonner";
 
 const FacultyProfile = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -55,6 +55,7 @@ const FacultyProfile = () => {
       });
       if (res.success) {
         toast.success("Profile updated successfully");
+        updateUser({ name: form.name });
       } else {
         toast.error(res.message || "Failed to update profile");
       }
